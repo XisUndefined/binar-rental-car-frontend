@@ -15,11 +15,14 @@ const DatePicker = () => {
   }
 
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false)
   const [currentDate, setCurrentDate] = useState(getStartOfDay())
   const [monthDetails, setMonthDetails] = useState([])
 
   const containerRef = useRef(null)
   const buttonRef = useRef(null)
+  const dropdownRef = useRef(null)
+  const optionRef = useRef(null)
 
   useEffect(() => {
     const generateMonthArray = () => {
@@ -54,14 +57,27 @@ const DatePicker = () => {
     setMonthDetails(generateMonthArray())
   }, [currentDate])
 
+  console.log(showDropdown)
+
   useEffect(() => {
     const addBackDrop = (e) => {
       if (
         showDatePicker &&
         !containerRef.current.contains(e.target) &&
-        !buttonRef.current.contains(e.target)
+        !buttonRef.current.contains(e.target) &&
+        optionRef.current
       ) {
         setShowDatePicker(false)
+        console.log('triggered first')
+      }
+
+      if (
+        showDropdown &&
+        !dropdownRef.current.contains(e.target) &&
+        !optionRef.current.contains(e.target)
+      ) {
+        setShowDropdown(false)
+        console.log('triggered')
       }
     }
     window.addEventListener('click', addBackDrop)
@@ -69,7 +85,7 @@ const DatePicker = () => {
     return () => {
       window.removeEventListener('click', addBackDrop)
     }
-  }, [showDatePicker])
+  }, [showDatePicker, showDropdown])
 
   const incerementMonth = () => {
     setCurrentDate((prevDate) => {
@@ -89,14 +105,16 @@ const DatePicker = () => {
 
   const MonthGrid = ({ monthArray }) => {
     const gridRowsClass =
-      monthArray.length === 6 ? 'grid-rows-6' : 'grid-rows-5'
+      monthArray.length === 6 ? 'grid-rows-6 gap-x-1' : 'grid-rows-5'
 
     return (
-      <div className={`grid ${gridRowsClass} h-[211px] w-[280px] grid-cols-7`}>
+      <div
+        className={`grid ${gridRowsClass} h-[211px] w-[280px] select-none grid-cols-7`}
+      >
         {monthArray.map((week, weekIndex) =>
           week.map((day, dayIndex) => (
             <button
-              className="rounded-full text-sm font-light active:border-[1px] active:border-[#35b0a7]"
+              className={`rounded-full text-sm font-light ${new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).toLocaleDateString() === new Date(currentDate.getFullYear(), currentDate.getMonth(), Number(day)).toLocaleDateString() ? 'border-[1px] border-[#35b0a7]' : ''}`}
               key={`${weekIndex}-${dayIndex}`}
               value={day}
               disabled={!day}
@@ -110,7 +128,7 @@ const DatePicker = () => {
   }
 
   return (
-    <div className="MyDatePicker relative">
+    <div className="MyDatePicker relative select-none">
       <div
         ref={buttonRef}
         className="flex h-9 w-full cursor-pointer items-center justify-between overflow-hidden rounded-sm border-[1px] border-neutral-300 fill-neutral-500 px-[9px] py-3"
@@ -128,16 +146,33 @@ const DatePicker = () => {
       </div>
       {showDatePicker ? (
         <div
-          className="mdp-container top-[40px]h-[392px] absolute left-0 flex w-[312px] flex-wrap gap-4 overflow-hidden rounded-sm bg-white px-[15px] py-4 shadow-high"
+          className="mdp-container absolute left-0 top-10 flex h-[392px] w-[312px] flex-wrap gap-4 overflow-hidden rounded-sm bg-white px-[15px] py-4 shadow-high"
           ref={containerRef}
         >
           <div className="navigation flex h-6 w-full justify-between">
             <button className="w-7" onClick={decrementMonth}>
               <FiArrowLeft className="h-full w-full" />
             </button>
-            <span className="flex cursor-pointer select-none items-center gap-2 text-sm font-normal">
+            <span
+              ref={dropdownRef}
+              className="relative flex w-36 cursor-pointer select-none items-center justify-center gap-2 text-sm font-normal"
+              onClick={() => {
+                setShowDropdown(!showDropdown)
+              }}
+            >
               {`${currentDate.toLocaleString('default', { month: 'long' })} ${currentDate.getFullYear()}`}
-              <FiChevronDown />
+              <FiChevronDown
+                aria-expanded={false}
+                className="origin-center transform duration-200 ease-in-out aria-expanded:rotate-180"
+              />
+              {showDropdown ? (
+                <div
+                  ref={optionRef}
+                  className="absolute top-7 h-[283px] w-full rounded-sm border-[1px] border-[#b2b2b2] bg-white shadow-high"
+                ></div>
+              ) : (
+                ''
+              )}
             </span>
             <button className="w-7" onClick={incerementMonth}>
               <FiArrowRight className="h-full w-full" />
@@ -167,6 +202,17 @@ const DatePicker = () => {
             </span>
           </div>
           <MonthGrid monthArray={monthDetails} />
+          <div className="flex gap-4">
+            <p className="w-1/2 text-sm font-light leading-5">
+              Choose range date max in 7 days
+            </p>
+            <button
+              className="w-1/2 rounded-sm bg-darkblue-700 text-center text-sm font-bold leading-5 text-neutral-100 disabled:bg-darkblue-100"
+              disabled
+            >
+              Pilih Tanggal
+            </button>
+          </div>
         </div>
       ) : (
         ''
