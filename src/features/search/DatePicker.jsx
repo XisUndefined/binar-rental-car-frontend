@@ -21,8 +21,9 @@ const DatePicker = () => {
 
   const containerRef = useRef(null)
   const buttonRef = useRef(null)
-  const dropdownRef = useRef(null)
+
   const optionRef = useRef(null)
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     const generateMonthArray = () => {
@@ -57,30 +58,32 @@ const DatePicker = () => {
     setMonthDetails(generateMonthArray())
   }, [currentDate])
 
-  console.log(showDropdown)
-
   useEffect(() => {
     const addBackDrop = (e) => {
       if (
         showDatePicker &&
         !containerRef.current.contains(e.target) &&
-        !buttonRef.current.contains(e.target) &&
-        optionRef.current
+        !buttonRef.current.contains(e.target)
       ) {
         setShowDatePicker(false)
-        console.log('triggered first')
+        setShowDropdown(false)
+        console.log('first if condition addBackDrop triggered')
       }
 
       if (
+        showDatePicker &&
         showDropdown &&
-        !dropdownRef.current.contains(e.target) &&
-        !optionRef.current.contains(e.target)
+        !optionRef.current.contains(e.target) &&
+        !dropdownRef.current.contains(e.target)
       ) {
         setShowDropdown(false)
-        console.log('triggered')
+        console.log('second if condition addBackDrop triggered')
       }
     }
     window.addEventListener('click', addBackDrop)
+    console.log('useEffect triggered', showDatePicker, showDropdown)
+    console.log(`dropDownRef\t: ${dropdownRef.current}`)
+    console.log(`optionRef\t: ${optionRef.current}`)
 
     return () => {
       window.removeEventListener('click', addBackDrop)
@@ -153,18 +156,23 @@ const DatePicker = () => {
             <button className="w-7" onClick={decrementMonth}>
               <FiArrowLeft className="h-full w-full" />
             </button>
-            <span
+            <div
               ref={dropdownRef}
-              className="relative flex w-36 cursor-pointer select-none items-center justify-center gap-2 text-sm font-normal"
-              onClick={() => {
-                setShowDropdown(!showDropdown)
-              }}
+              className="relative flex w-36 cursor-pointer select-none items-center justify-center"
             >
-              {`${currentDate.toLocaleString('default', { month: 'long' })} ${currentDate.getFullYear()}`}
-              <FiChevronDown
-                aria-expanded={false}
-                className="origin-center transform duration-200 ease-in-out aria-expanded:rotate-180"
-              />
+              <span
+                className="flex w-full items-center justify-center gap-2 text-sm font-normal"
+                onClick={() => {
+                  setShowDropdown(!showDropdown)
+                }}
+              >
+                {`${currentDate.toLocaleString('default', { month: 'long' })} ${currentDate.getFullYear()}`}
+                <FiChevronDown
+                  id="dropdown-icon"
+                  aria-expanded={showDropdown}
+                  className="origin-center transform duration-200 ease-in-out aria-expanded:rotate-180"
+                />
+              </span>
               {showDropdown ? (
                 <div
                   ref={optionRef}
@@ -173,7 +181,7 @@ const DatePicker = () => {
               ) : (
                 ''
               )}
-            </span>
+            </div>
             <button className="w-7" onClick={incerementMonth}>
               <FiArrowRight className="h-full w-full" />
             </button>
