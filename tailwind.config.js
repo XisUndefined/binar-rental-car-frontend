@@ -35,6 +35,7 @@ export default {
       },
       fontFamily: {
         sans: ['Helvetica', 'sans-serif'],
+        display: ['Rubik'],
       },
       boxShadow: {
         low: '0px 0px 4px 0px rgba(0, 0, 0, 0.15)',
