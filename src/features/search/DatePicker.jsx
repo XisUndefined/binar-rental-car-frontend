@@ -17,7 +17,7 @@ const DatePicker = () => {
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const [currentDate, setCurrentDate] = useState(getStartOfDay())
-  const [monthDetails, setMonthDetails] = useState([])
+  const [monthArray, setMonthArray] = useState([])
 
   const containerRef = useRef(null)
   const buttonRef = useRef(null)
@@ -55,35 +55,32 @@ const DatePicker = () => {
       return weeks
     }
 
-    setMonthDetails(generateMonthArray())
+    setMonthArray(generateMonthArray())
   }, [currentDate])
 
   useEffect(() => {
     const addBackDrop = (e) => {
       if (
         showDatePicker &&
+        !e.target.classList.contains('month-option') &&
         !containerRef.current.contains(e.target) &&
         !buttonRef.current.contains(e.target)
       ) {
         setShowDatePicker(false)
         setShowDropdown(false)
-        console.log('first if condition addBackDrop triggered')
       }
 
       if (
         showDatePicker &&
         showDropdown &&
+        !e.target.classList.contains('month-option') &&
         !optionRef.current.contains(e.target) &&
         !dropdownRef.current.contains(e.target)
       ) {
         setShowDropdown(false)
-        console.log('second if condition addBackDrop triggered')
       }
     }
     window.addEventListener('click', addBackDrop)
-    console.log('useEffect triggered', showDatePicker, showDropdown)
-    console.log(`dropDownRef\t: ${dropdownRef.current}`)
-    console.log(`optionRef\t: ${optionRef.current}`)
 
     return () => {
       window.removeEventListener('click', addBackDrop)
@@ -104,6 +101,44 @@ const DatePicker = () => {
       nextMonthDate.setMonth(prevDate.getMonth() - 1)
       return nextMonthDate
     })
+  }
+
+  const MonthOptions = ({ currentDate }) => {
+    const months = []
+
+    for (let i = 0; i <= 12; i++) {
+      months.push(
+        `${new Date(new Date().getFullYear(), new Date().getMonth() + i).toLocaleString('default', { month: 'short' })} ${new Date(new Date().getFullYear(), new Date().getMonth() + i).getFullYear()}`
+      )
+    }
+
+    return (
+      <div
+        ref={optionRef}
+        className="dropdown-scrollbar absolute top-7 h-[275px] w-full overflow-y-auto rounded-sm border-[1px] border-[#b2b2b2] bg-white py-3 shadow-high"
+      >
+        {months.map((month) => (
+          <button
+            key={month}
+            onClick={() => {
+              setCurrentDate((prev) => {
+                const monthDate = new Date(prev)
+                const diffMonths =
+                  (new Date(month).getFullYear() - monthDate.getFullYear()) *
+                    12 +
+                  (new Date(month).getMonth() - monthDate.getMonth())
+                monthDate.setMonth(prev.getMonth() + diffMonths)
+                return monthDate
+              })
+              setShowDropdown(!showDropdown)
+            }}
+            className={`month-option w-full px-3 py-[6px] text-start font-display text-base leading-6 ${`${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getFullYear()}` === month ? 'bg-[#e8f6f1]' : ''}`}
+          >
+            {month}
+          </button>
+        ))}
+      </div>
+    )
   }
 
   const MonthGrid = ({ monthArray }) => {
@@ -153,8 +188,15 @@ const DatePicker = () => {
           ref={containerRef}
         >
           <div className="navigation flex h-6 w-full justify-between">
-            <button className="w-7" onClick={decrementMonth}>
-              <FiArrowLeft className="h-full w-full" />
+            <button
+              className="group w-7"
+              onClick={decrementMonth}
+              disabled={
+                `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getFullYear()}` ===
+                `${new Date().toLocaleString('default', { month: 'short' })} ${new Date().getFullYear()}`
+              }
+            >
+              <FiArrowLeft className="h-full w-full group-disabled:stroke-neutral-300" />
             </button>
             <div
               ref={dropdownRef}
@@ -173,17 +215,17 @@ const DatePicker = () => {
                   className="origin-center transform duration-200 ease-in-out aria-expanded:rotate-180"
                 />
               </span>
-              {showDropdown ? (
-                <div
-                  ref={optionRef}
-                  className="absolute top-7 h-[283px] w-full rounded-sm border-[1px] border-[#b2b2b2] bg-white shadow-high"
-                ></div>
-              ) : (
-                ''
-              )}
+              {showDropdown ? <MonthOptions currentDate={currentDate} /> : ''}
             </div>
-            <button className="w-7" onClick={incerementMonth}>
-              <FiArrowRight className="h-full w-full" />
+            <button
+              className="group w-7"
+              onClick={incerementMonth}
+              disabled={
+                `${currentDate.toLocaleString('default', { month: 'short' })} ${currentDate.getFullYear()}` ===
+                `${new Date(new Date().getFullYear() + 1, new Date().getMonth()).toLocaleString('default', { month: 'short' })} ${new Date(new Date().getFullYear() + 1, new Date().getMonth()).getFullYear()}`
+              }
+            >
+              <FiArrowRight className="h-full w-full group-disabled:stroke-neutral-300" />
             </button>
           </div>
           <div className="flex w-full justify-center">
@@ -209,7 +251,7 @@ const DatePicker = () => {
               S
             </span>
           </div>
-          <MonthGrid monthArray={monthDetails} />
+          <MonthGrid monthArray={monthArray} />
           <div className="flex gap-4">
             <p className="w-1/2 text-sm font-light leading-5">
               Choose range date max in 7 days
